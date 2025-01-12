@@ -18,10 +18,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation";
 import {Checkbox} from "@/components/ui/checkbox";
 import CreateButton from '@/components/shared/CreateButton';
-import ClubPositionsInputGroup from "@/components/shared/ClubPositionsInputGroup";
-import ClubLeadersInputGroup from "@/components/shared/ClubLeadersInputGroup";
-import ClubWorkersInputGroup from "@/components/shared/ClubWorkersInputGroup";
-import ClubMiniClubsInputGroup from "@/components/shared/ClubMiniClubInputGroup";
+import ClubPositionsInputGroup from "@/components/shared/club/ClubPositionsInputGroup";
+import ClubLeadersInputGroup from "@/components/shared/club/ClubLeadersInputGroup";
+import ClubWorkersInputGroup from "@/components/shared/club/ClubWorkersInputGroup";
+import ClubMiniClubsInputGroup from "@/components/shared/club/ClubMiniClubInputGroup";
 
 
 const createClub = () => {
@@ -51,7 +51,7 @@ const createClub = () => {
     setPositionsList(inputPositions)
     let positions = []
     inputPositions.map((position) => {
-      positions.push({name: position, club: clubName})
+      positions.push({name: position})
     })
     setPositions(positions)
   }
@@ -67,7 +67,7 @@ const createClub = () => {
     inputWorkers.map((worker: Record<string, any>) => {
       workers.push({
         name: worker.name,
-        position: worker.position,
+        position: {name: worker.position},
       })
     })
     console.log("getContentWorker, workersList:", workersList)
@@ -81,8 +81,8 @@ const createClub = () => {
     inputMiniClubs.map((miniClub: any)=>{
       miniClubs.push({
         name: miniClub.miniClubName,
-        leader: miniClub.leader.leaderName,
-        workers: [miniClub.workers.map((worker: Record<string, any>) => (worker.name))],
+        leader: [{name: miniClub.leader.leaderName}],
+        workers: miniClub.workers.map((worker: Record<string, any>) => ({name: worker.name})),
       })
     })
     console.log("getContentMiniClub:", miniClubs)
@@ -99,7 +99,7 @@ const createClub = () => {
     inputLeaders.map((leader: Record<string, any>) => {
       leaders.push({
         name: leader.name,
-        position: leader.position,
+        position: {name: leader.position},
       })
     })
     console.log("getContentLeader, leadersList:", leadersList)
@@ -253,7 +253,14 @@ const createClub = () => {
                 type="button"
                 onClick={async () => {
                   setSubmitting(true);
-                  const res = await fetch('/api/club/create', {
+                  console.log({
+                    clubName: clubName,
+                    admin: {name: admin},
+                    leaders: leaders,
+                    workers: workers,
+                    miniClubs: miniClubs,
+                    position: positions,})
+                  const res = await fetch('/api/clubs/create', {
                     method: 'POST',
                     headers: {"content-type": "application/json"},
                     body: JSON.stringify({
@@ -262,10 +269,9 @@ const createClub = () => {
                       leaders: leaders,
                       workers: workers,
                       miniClubs: miniClubs,
-                      position: positions,
+                      positions: positions,
                     }),
                   }).then(async res => await res.json())
-                  console.log(res)
                   setSubmitting(false);
                 }}
             />

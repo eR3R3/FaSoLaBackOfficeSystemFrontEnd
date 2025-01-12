@@ -97,8 +97,6 @@ const sideBarContent = [
 const SideBar = () => {
   const router = useRouter()
   // @ts-ignore
-  // @ts-ignore
-  // @ts-ignore
   return (
     <div>
       <Sidebar>
