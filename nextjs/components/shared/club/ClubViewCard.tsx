@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import {
   Card,
@@ -8,11 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {Button} from "@/components/ui/button";
+import {useRouter} from "next/navigation";
 
 const ClubViewCard = ({cardInfo}: {cardInfo: any}) => {
+  const router = useRouter();
   return (
     <div className="">
-      <Card>
+      <Card onClick={()=>{router.push("/superAdmin/user/view")}}>
         <CardHeader>
           <CardTitle>{cardInfo.clubName}</CardTitle>
           <CardDescription className='font-semibold'>总共人数：{cardInfo.leaders.length + cardInfo.workers.length + 1}</CardDescription>

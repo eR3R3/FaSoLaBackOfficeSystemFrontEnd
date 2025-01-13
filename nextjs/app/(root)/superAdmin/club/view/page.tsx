@@ -8,7 +8,7 @@ const View = () => {
 
   useEffect(()=>{
     const fetchAllClubs = async () => {
-      const allClubs = await fetch('/api/club/fetchAll').then(async res => await res.json())
+      const allClubs = await fetch('/api/clubs/fetchAll').then(async res => await res.json())
       console.log("first time",allClubs)
       setAllClubs(allClubs)
     }
@@ -20,7 +20,7 @@ const View = () => {
       <div className='flex flex-row gap-3 flex-wrap pt-14'>
         {allClubs.map((club, index) => {
           return (
-              <ClubViewCard key={index} cardInfo={club}></ClubViewCard>
+              <ClubViewCard key={index} cardInfo={club} ></ClubViewCard>
           )
         })}
       </div>

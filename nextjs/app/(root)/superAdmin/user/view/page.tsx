@@ -131,7 +131,19 @@ const UserView = () => {
                     </TableRow>
                 ))
                 : ((content?.clubName )? (
-                      content.leaders.map((leader: any, index: number) => (
+                   <>
+                     <TableRow >
+                       <TableCell className="font-medium">{content.admin.name}</TableCell>
+                       <TableCell>{content.admin?.position?.name}</TableCell>
+                       <TableCell>{content.admin.role}</TableCell>
+                       <TableCell>
+                         {content.admin?.leadingClub?.clubName || content.admin?.workingClub?.clubName || content.admin?.adminClub?.clubName}
+                       </TableCell>
+                       <TableCell className="text-right">
+                         {content.admin?.leadingMiniClub?.name || content.admin?.workingMiniClub?.name || "此人未在小组"}
+                       </TableCell>
+                     </TableRow>
+                   {content.leaders.map((leader: any, index: number) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">{leader.name}</TableCell>
                             <TableCell>{leader.position?.name}</TableCell>
@@ -143,21 +155,22 @@ const UserView = () => {
                               {leader?.leadingMiniClub?.name || leader?.workingMiniClub?.name || "此人未在小组"}
                             </TableCell>
                           </TableRow>
-                      ))
+                      ))}
 
-                      // content.workers.map((worker: any, index: number) => (
-                      //     <TableRow key={index}>
-                      //       <TableCell className="font-medium">{worker.name}</TableCell>
-                      //       <TableCell>{worker.position?.name}</TableCell>
-                      //       <TableCell>{worker.role}</TableCell>
-                      //       <TableCell>
-                      //         {worker?.leadingClub?.clubName || worker?.workingClub?.clubName || worker?.adminClub?.clubName}
-                      //       </TableCell>
-                      //       <TableCell className="text-right">
-                      //         {worker?.leadingMiniClub?.name || worker?.workingMiniClub?.name || "此人未在小组"}
-                      //       </TableCell>
-                      //     </TableRow>
-                      // ))
+                   {content.workers.map((worker: any, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{worker.name}</TableCell>
+                            <TableCell>{worker.position?.name}</TableCell>
+                            <TableCell>{worker.role}</TableCell>
+                            <TableCell>
+                              {worker?.leadingClub?.clubName || worker?.workingClub?.clubName || worker?.adminClub?.clubName}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {worker?.leadingMiniClub?.name || worker?.workingMiniClub?.name || "此人未在小组"}
+                            </TableCell>
+                          </TableRow>
+                      ))}
+                  </>
                 ) : (
                     content.workers.map((leader: any, index: number) => (
                         <TableRow key={index}>
