@@ -14,8 +14,8 @@ import {useRouter} from "next/navigation";
 const ClubViewCard = ({cardInfo}: {cardInfo: any}) => {
   const router = useRouter();
   return (
-    <div className="">
-      <Card onClick={()=>{router.push("/superAdmin/user/view")}}>
+    <div>
+      <Card>
         <CardHeader>
           <CardTitle>{cardInfo.clubName}</CardTitle>
           <CardDescription className='font-semibold'>总共人数：{cardInfo.leaders.length + cardInfo.workers.length + 1}</CardDescription>
@@ -31,7 +31,7 @@ const ClubViewCard = ({cardInfo}: {cardInfo: any}) => {
             ))}
         </CardContent>
         <CardFooter>
-          <Button >查看人员信息</Button>
+          <Button onClick={()=>{router.push("/superAdmin/user/view")}}>查看人员信息</Button>
         </CardFooter>
       </Card>
     </div>

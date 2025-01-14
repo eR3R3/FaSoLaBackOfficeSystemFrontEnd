@@ -1,10 +1,12 @@
-'use client'
+'use client';
 
-import {useEffect, useState} from 'react';
-import {Input} from "@/components/ui/input";
-import {Check, ChevronsUpDown, CircleMinus} from "lucide-react";
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from 'react';
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -12,124 +14,145 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown, CircleMinus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const ClubWorkersInputGroup = ({positions, getContent}:{positions: string[], getContent: any}) => {
+const ClubLeadersInputGroup = ({ positions, getContent }: { positions: string[], getContent: any }) => {
+  const [leaders, setLeaders] = useState([{ name: "", position: "", isNameOpen: false, isPositionOpen: false }]);
+  const [allUsers, setAllUsers] = useState<string[]>([]);
 
-  const [leaders, setLeaders] = useState([{name: "", position: "", isOpen: false}]);
-
-
-
-  // 添加新的输入框
+// 添加新的输入框
   const handleAddLeader = () => {
-    setLeaders([...leaders, {name: "", position: "", isOpen: false}]);
-  };
-
-  const handleOpenChange = (index: number, isOpen: boolean) => {
-    const updatedLeaders = leaders.map((leader, i) =>
-        i === index ? {name: leader.name, position: leader.position, isOpen: isOpen} : leader
-    );
-    console.log(updatedLeaders);
-    setLeaders(updatedLeaders);
-  }
-
-  // 删除某个输入框
-  const handleRemoveLeader = (index: number) => {
-    const newLeaders = leaders.filter((_, i) => i !== index);
-    getContent(newLeaders);
+    const newLeaders = [...leaders];
+    newLeaders.push({ name: "", position: "", isNameOpen: false, isPositionOpen: false });
     setLeaders(newLeaders);
   };
 
-  // 更新某个输入框的值
-  const handleLeaderNamesChange = (index: number, event: any) => {
-    const updatedLeaders = leaders.map((leader, i) =>
-        i === index ? {name: event.target.value, position: leader.position, isOpen: leader.isOpen}  : leader
-    );
-    console.log(updatedLeaders);
-    getContent(updatedLeaders);
-    setLeaders(updatedLeaders);
+// 更新 Popover 的打开状态
+  const handleOpenChange = (index, field, isOpen) => {
+    const newLeaders = [...leaders];
+    newLeaders[index][field] = isOpen;
+    setLeaders(newLeaders);
   };
+
+// 删除某个输入框
+  const handleRemoveLeader = (index) => {
+    const newLeaders = [];
+    for (let i = 0; i < leaders.length; i++) {
+      if (i !== index) {
+        newLeaders.push(leaders[i]);
+      }
+    }
+    setLeaders(newLeaders);
+    getContent(newLeaders);
+  };
+
+// 更新某个输入框的值
+  const handleLeaderChange = (index, field, value) => {
+    const newLeaders = [...leaders];
+    newLeaders[index][field] = value;
+    setLeaders(newLeaders);
+    getContent(newLeaders);
+  };
+
+
+  // 加载用户数据
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      const response = await fetch('/api/users/fetchAll');
+      const data = await response.json();
+      const userNames = data.map((user: any) => user.name);
+      setAllUsers(userNames);
+    };
+    fetchAllUsers();
+  }, []);
 
   return (
       <div>
-        {leaders.map((leader, index) => {
-          return(
-              <div key={index} className="w-full flex justify-between gap-4 pb-2">
-                <Input
-                    type="text"
-                    value={leader.name}
-                    onChange={(e) => handleLeaderNamesChange(index, e)}
-                    placeholder={`员工 #${index + 1}`}
-                    className="w-full p-4 border-2 border-gray-700 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-gray-700 transition-all "
-                />
+        {leaders.map((leader, index) => (
+            <div key={index} className="w-full flex justify-between gap-4 pb-2">
+              {/* Name Popover */}
+              <Popover
+                  open={leader.isNameOpen}
+                  onOpenChange={(isOpen) => handleOpenChange(index, "isNameOpen", isOpen)}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {leader.name || "选择员工..."}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="搜索姓名..." className="h-9" />
+                    <CommandList>
+                      <CommandEmpty>未找到该姓名.</CommandEmpty>
+                      <CommandGroup>
+                        {allUsers.map((name) => (
+                            <CommandItem
+                                key={name}
+                                value={name}
+                                onSelect={() => {
+                                  handleLeaderChange(index, "name", name);
+                                  handleOpenChange(index, "isNameOpen", false);
+                                }}
+                            >
+                              {name}
+                              <Check className={cn("ml-auto", leader.name === name ? "opacity-100" : "opacity-0")} />
+                            </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
 
-                <Popover open={leader.isOpen} onOpenChange={(isOpen)=>handleOpenChange(index, isOpen)}>
-                  <PopoverTrigger asChild>
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={leader.isOpen}
-                        className="w-full justify-between"
-                    >
-                      {leader.position
-                          ? leader.position
-                          : "选择岗位..."}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="选择岗位" className="h-9" />
-                      <CommandList>
-                        <CommandEmpty>未找到此职业.</CommandEmpty>
-                        <CommandGroup>
-                          {positions.map((position) => (
-                              <CommandItem
-                                  key={position}
-                                  value={position}
-                                  onSelect={(currentValue) => {
-                                    console.log(currentValue);
-                                    const updatedLeaders = leaders.map((leader, i) =>
-                                        i === index
-                                            ? {
-                                              ...leader,  // 保持其他属性不变
-                                              position: leader.position !== currentValue ? currentValue : "",  // 确保只有在 `position` 不等时更新
-                                              isOpen: false  // 关闭 Popover
-                                            }
-                                            : leader
-                                    );
-                                    getContent(updatedLeaders)
-                                    setLeaders(updatedLeaders);  // 更新 leaders
-                                  }}
-                              >
-                                {position}
-                                <Check
-                                    className={cn(
-                                        "ml-auto",
-                                        leader.position === position ? "opacity-100" : "opacity-0"
-                                    )}
-                                />
-                              </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+              {/* Position Popover */}
+              <Popover
+                  open={leader.isPositionOpen}
+                  onOpenChange={(isOpen) => handleOpenChange(index, "isPositionOpen", isOpen)}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {leader.position || "选择职位..."}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="选择职位" className="h-9" />
+                    <CommandList>
+                      <CommandEmpty>未找到此职位.</CommandEmpty>
+                      <CommandGroup>
+                        {positions.map((position) => (
+                            <CommandItem
+                                key={position}
+                                value={position}
+                                onSelect={() => {
+                                  handleLeaderChange(index, "position", position);
+                                  handleOpenChange(index, "isPositionOpen", false);
+                                }}
+                            >
+                              {position}
+                              <Check className={cn("ml-auto", leader.position === position ? "opacity-100" : "opacity-0")} />
+                            </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
 
-                <CircleMinus onClick={() => handleRemoveLeader(index)} className='mt-1 w-[90px]'/>
-              </div>
-          )})}
-        <Button type="button" className="mt-2 text-sm font-" onClick={handleAddLeader}>
+              {/* 删除按钮 */}
+              <CircleMinus onClick={() => handleRemoveLeader(index)} className="mt-1 w-[90px] cursor-pointer" />
+            </div>
+        ))}
+        <Button type="button" className="mt-2 text-sm" onClick={handleAddLeader}>
           增加员工
         </Button>
       </div>
   );
 };
 
-export default ClubWorkersInputGroup;
+export default ClubLeadersInputGroup;

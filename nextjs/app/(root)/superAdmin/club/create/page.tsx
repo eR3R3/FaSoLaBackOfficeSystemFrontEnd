@@ -1,27 +1,27 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs';
 import React, {useEffect, useRef, useState} from 'react';
 import {z} from 'zod';
 import { useForm, FormProvider } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import {Textarea} from "@/components/ui/textarea";
 import {Input} from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation";
-import {Checkbox} from "@/components/ui/checkbox";
 import CreateButton from '@/components/shared/CreateButton';
 import ClubPositionsInputGroup from "@/components/shared/club/ClubPositionsInputGroup";
 import ClubLeadersInputGroup from "@/components/shared/club/ClubLeadersInputGroup";
 import ClubWorkersInputGroup from "@/components/shared/club/ClubWorkersInputGroup";
 import ClubMiniClubsInputGroup from "@/components/shared/club/ClubMiniClubInputGroup";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command"
 
 
 const createClub = () => {
@@ -37,6 +37,7 @@ const createClub = () => {
   const [leaders, setLeaders] = useState([])
   const [miniClubs, setMiniClubs] = useState([])
   const [admin, setAdmin] = useState('')
+  const [allUsers, setAllUsers] = useState([])
 
   const defaultValues = {
     admin: "",
@@ -108,12 +109,37 @@ const createClub = () => {
     setLeaders(leaders)
   }
 
-  const formSchema = z.object({
-  });
+  // 加载用户数据
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      const response = await fetch('/api/users/fetchAll');
+      const data = await response.json();
+      const userNames = data.map((user: any) => user.name);
+      setAllUsers(userNames);
+    };
+    fetchAllUsers();
+  }, []);
+
+
+  // Handle input change
+  const handleChange = (value: string) => {
+    setInputValue(value);
+    if (value) {
+      const filtered = allUsers.filter((item) =>
+          item.toLowerCase().includes(value.toLowerCase())
+      );
+      setSuggestions(filtered);
+    } else {
+      setSuggestions([]);
+    }
+  };
 
   const form = useForm({ defaultValues: defaultValues})
 
-
+  const [inputValue, setInputValue] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  // @ts-ignore
+  // @ts-ignore
   return (
       <FormProvider {...form}>
         <form className=" ">
@@ -154,17 +180,31 @@ const createClub = () => {
                     <FormItem className="w-full">
                       <FormLabel className="text-lg font-bold text-gray-800">部门主管</FormLabel>
                       <FormControl>
-                        <Input
-                            value={admin}
-                            onChange={(e: any)=>{setAdmin(e.target.value)}}
-                            placeholder="输入部门主管"
-                            className="p-4 border-2 border-gray-700 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-gray-700 transition-all"
-                        >
-                        </Input>
+                        <Command>
+                          <CommandInput
+                              placeholder="Type a name..."
+                              value={inputValue}
+                              onValueChange={handleChange}
+                          />
+                          <CommandList className='max-h-10 overflow-y-auto z-10'>
+                            {suggestions.length > 0 ? (
+                                suggestions.map((suggestion, index) => (
+                                    <CommandItem
+                                        key={index}
+                                        onSelect={(value) => {
+                                          setInputValue(value); // Set the clicked suggestion as input value
+                                          setSuggestions([]);  // Clear suggestions
+                                        }}
+                                    >
+                                      {suggestion}
+                                    </CommandItem>
+                                ))
+                            ) : (
+                                <p className="px-4 py-1 text-sm text-gray-500">No results found.</p>
+                            )}
+                          </CommandList>
+                        </Command>
                       </FormControl>
-                      <FormDescription className="text-sm text-gray-500">
-                        输入此部门的部门主管.
-                      </FormDescription>
                       <FormMessage/>
                     </FormItem>
                 )}
@@ -253,13 +293,7 @@ const createClub = () => {
                 type="button"
                 onClick={async () => {
                   setSubmitting(true);
-                  console.log({
-                    clubName: clubName,
-                    admin: {name: admin},
-                    leaders: leaders,
-                    workers: workers,
-                    miniClubs: miniClubs,
-                    position: positions,})
+                  if(!clubName){}
                   const res = await fetch('/api/clubs/create', {
                     method: 'POST',
                     headers: {"content-type": "application/json"},
@@ -273,6 +307,7 @@ const createClub = () => {
                     }),
                   }).then(async res => await res.json())
                   setSubmitting(false);
+                  router.push('/superAdmin/club/view')
                 }}
             />
           </div>
