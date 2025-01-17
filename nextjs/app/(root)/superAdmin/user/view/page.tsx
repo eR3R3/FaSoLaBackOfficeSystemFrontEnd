@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {useParams} from "next/navigation";
 
 
 const UserView = () => {
@@ -19,7 +20,6 @@ const UserView = () => {
   const [content, setContent] = useState<any>()
   const [allClubs, setAllClubs] = useState([])
   const [allUsers, setAllUsers] = useState([])
-
 
   useEffect(() => {
     const fetchAllClubs = async () => {
@@ -30,19 +30,20 @@ const UserView = () => {
     fetchAllClubs()
   }, [])
 
+
+
   useEffect(() => {
-    const fetchAllUsers = async () => {
-      const allUsers_ = await fetch('http://localhost:3001/api/users/fetchAll', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then(async res => await res.json())
-      console.log("first time users", allUsers_)
-      setAllUsers(allUsers_)
+    const handleAllUser = async () => {
+          const allUsers_ = await fetch('http://localhost:3001/api/users/fetchAll', {
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+          }).then(async res => await res.json())
+          console.log("first time users", allUsers_)
+          setAllUsers(allUsers_)
+      }
+      handleAllUser()
     }
-    fetchAllUsers()
-  }, [])
+  ,[])
 
 
   async function findClubByClubName(clubName: string) {

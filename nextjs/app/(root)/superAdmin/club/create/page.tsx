@@ -13,15 +13,15 @@ import ClubWorkersInputGroup from "@/components/shared/club/ClubWorkersInputGrou
 import ClubMiniClubsInputGroup from "@/components/shared/club/ClubMiniClubInputGroup";
 import {
   Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
+    CommandEmpty,
+    CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command"
+import {Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
+import {Check, ChevronsUpDown} from "lucide-react";
+import ClubAdminInputGroup from "@/components/shared/club/ClubAdminInputGroup";
 
 
 const createClub = () => {
@@ -36,8 +36,9 @@ const createClub = () => {
   const [workers, setWorkers] = useState([])
   const [leaders, setLeaders] = useState([])
   const [miniClubs, setMiniClubs] = useState([])
-  const [admin, setAdmin] = useState('')
   const [allUsers, setAllUsers] = useState([])
+  const [admin, setAdmin] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string>('')
 
   const defaultValues = {
     admin: "",
@@ -58,9 +59,7 @@ const createClub = () => {
   }
 
   const getContentWorker = (inputWorkers: any) => {
-    // @ts-ignore
     let workersList = []
-    // @ts-ignore
     let workers = []
     inputWorkers.map((worker: Record<string, any>) => {
       workersList.push(worker.name)
@@ -90,6 +89,12 @@ const createClub = () => {
     setMiniClubs(miniClubs)
   }
 
+  const getContentAdmin = (inputAdmin) => {
+      let admin = []
+      admin.push(inputAdmin)
+      setAdmin(admin[0].name)
+  }
+
   const getContentLeader = (inputLeaders: any) => {
     // @ts-ignore
     let leadersList = []
@@ -110,34 +115,20 @@ const createClub = () => {
   }
 
   // 加载用户数据
-  useEffect(() => {
-    const fetchAllUsers = async () => {
-      const response = await fetch('/api/users/fetchAll');
-      const data = await response.json();
-      const userNames = data.map((user: any) => user.name);
-      setAllUsers(userNames);
-    };
-    fetchAllUsers();
-  }, []);
+    useEffect(() => {
+        const fetchAllUsers = async () => {
+            const response = await fetch('/api/users/fetchAll');
+            const data = await response.json();
+            const userNames = data.map((user: any) => user.name);
+            setAllUsers(userNames);
+        };
+        fetchAllUsers();
+    }, []);
 
 
-  // Handle input change
-  const handleChange = (value: string) => {
-    setInputValue(value);
-    if (value) {
-      const filtered = allUsers.filter((item) =>
-          item.toLowerCase().includes(value.toLowerCase())
-      );
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
-  };
 
   const form = useForm({ defaultValues: defaultValues})
 
-  const [inputValue, setInputValue] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   // @ts-ignore
   // @ts-ignore
   return (
@@ -180,30 +171,7 @@ const createClub = () => {
                     <FormItem className="w-full">
                       <FormLabel className="text-lg font-bold text-gray-800">部门主管</FormLabel>
                       <FormControl>
-                        <Command>
-                          <CommandInput
-                              placeholder="Type a name..."
-                              value={inputValue}
-                              onValueChange={handleChange}
-                          />
-                          <CommandList className='max-h-10 overflow-y-auto z-10'>
-                            {suggestions.length > 0 ? (
-                                suggestions.map((suggestion, index) => (
-                                    <CommandItem
-                                        key={index}
-                                        onSelect={(value) => {
-                                          setInputValue(value); // Set the clicked suggestion as input value
-                                          setSuggestions([]);  // Clear suggestions
-                                        }}
-                                    >
-                                      {suggestion}
-                                    </CommandItem>
-                                ))
-                            ) : (
-                                <p className="px-4 py-1 text-sm text-gray-500">No results found.</p>
-                            )}
-                          </CommandList>
-                        </Command>
+                        <ClubAdminInputGroup getContent={getContentAdmin}></ClubAdminInputGroup>
                       </FormControl>
                       <FormMessage/>
                     </FormItem>
@@ -286,14 +254,23 @@ const createClub = () => {
                 )}
             />
           </div>
+          <div>
+              {errorMessage&&<p className="text-red-600">{errorMessage}</p>}
+          </div>
 
-          <div className="text-center justify-center flex pt-4">
+          <div className="text-center justify-center flex pt-8">
             <CreateButton
                 name={submitting ? '创建部门中' : '创建部门'}
                 type="button"
                 onClick={async () => {
                   setSubmitting(true);
-                  if(!clubName){}
+                  console.log({
+                    clubName: clubName,
+                    admin: {name: admin},
+                    leaders: leaders,
+                    workers: workers,
+                    miniClubs: miniClubs,
+                    positions: positions})
                   const res = await fetch('/api/clubs/create', {
                     method: 'POST',
                     headers: {"content-type": "application/json"},
@@ -307,7 +284,12 @@ const createClub = () => {
                     }),
                   }).then(async res => await res.json())
                   setSubmitting(false);
-                  router.push('/superAdmin/club/view')
+                  if (res.message){
+                      setErrorMessage(res.message)
+                  }
+                  else {
+                      router.push('/superAdmin/club/view')
+                  }
                 }}
             />
           </div>

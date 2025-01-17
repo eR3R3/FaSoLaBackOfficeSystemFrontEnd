@@ -31,7 +31,7 @@ const ClubViewCard = ({cardInfo}: {cardInfo: any}) => {
             ))}
         </CardContent>
         <CardFooter>
-          <Button onClick={()=>{router.push("/superAdmin/user/view")}}>查看人员信息</Button>
+          <Button onClick={()=>{router.push(`/superAdmin/user/view`)}}>查看人员信息</Button>
         </CardFooter>
       </Card>
     </div>
